@@ -4,7 +4,7 @@
 2. cd indicator-text && make
 3. chmod +x ./zte-indicator
 4. ./zte-indicator
-5. sudo ln -n ./zte-indicator /usr/local/bin
+5. sudo ln -s ./zte-indicator /usr/local/bin
 6. zte-indicator
 
 ## Screenshots

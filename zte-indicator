@@ -4,7 +4,7 @@
 use GuzzleHttp\Client;
 use Symfony\Component\Process\Process;
 
-require 'vendor/autoload.php';
+require './vendor/autoload.php';
 
 $client = new Client([
     'base_uri' => 'http://192.168.0.1/goform/goform_get_cmd_process',
