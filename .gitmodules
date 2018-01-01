@@ -1,0 +1,3 @@
+[submodule "indicator-text"]
+	path = indicator-text
+	url = https://github.com/eglimi/indicator-text.git
