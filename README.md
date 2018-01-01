@@ -1,4 +1,4 @@
-#ZTE MF823 panel-indicator
+# ZTE MF823 panel-indicator
 
 1. git submodule init
 2. cd indicator-text && make
