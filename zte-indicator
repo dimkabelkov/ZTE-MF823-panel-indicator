@@ -1,0 +1,74 @@
+#!/usr/bin/php
+<?php
+
+use GuzzleHttp\Client;
+use Symfony\Component\Process\Process;
+
+require 'vendor/autoload.php';
+
+$client = new Client([
+    'base_uri' => 'http://192.168.0.1/goform/goform_get_cmd_process',
+    'query' => [
+        'multi_data' => 1,
+        'isTest' => false,
+        'sms_received_flag_flag' => 0,
+        'sts_received_flag_flag' => 0,
+        'cmd' => implode(',', [
+            'network_provider',
+            'network_provider2',
+            'network_type',
+            'signalbar',
+            'realtime_rx_thrpt',
+            'realtime_tx_thrpt'
+        ])
+    ],
+    'headers' => [
+        'Referer' => 'http://192.168.0.1/index.html',
+        'X-Requested-With' => 'XMLHttpRequest'
+    ]
+]);
+
+$process = new Process('./indicator-text/indicator-text -u');
+$process->start();
+
+while ($process->isRunning()) {
+
+    $response = $client->request('GET');
+    $data = json_decode($response->getBody()->getContents(), true);
+
+    $string = ($data['network_provider2'] ? $data['network_provider2'] : $data['network_provider']) . ' ' . $data['network_type'] . ' ' . $data['signalbar'] . '/5, ' ;
+    
+    $data['realtime_rx_thrpt'] = $data['realtime_rx_thrpt'] * 8;
+    $postfix = 'Бит/с';
+
+    if ($data['realtime_rx_thrpt'] > 1024) {
+        $data['realtime_rx_thrpt'] = $data['realtime_rx_thrpt'] / 1024;
+        $postfix = 'КБит/с';
+    }
+    if ($data['realtime_rx_thrpt'] > 1024) {
+        $data['realtime_rx_thrpt'] = $data['realtime_rx_thrpt'] / 1024;
+        $postfix = 'MБит/с';
+    }
+    $data['realtime_rx_thrpt'] = round($data['realtime_rx_thrpt'], 1);
+    $string .= $data['realtime_rx_thrpt'] . $postfix;
+
+    $data['realtime_tx_thrpt'] = $data['realtime_tx_thrpt'] * 8;
+    $postfix = 'Бит/с';
+    if ($data['realtime_tx_thrpt'] > 1024) {
+        $data['realtime_tx_thrpt'] = $data['realtime_tx_thrpt'] / 1024;
+        $postfix = 'КБит/с';
+    }
+    if ($data['realtime_tx_thrpt'] > 1024) {
+        $data['realtime_tx_thrpt'] = $data['realtime_tx_thrpt'] / 1024;
+        $postfix = 'MБит/с';
+    }
+    $data['realtime_tx_thrpt'] = round($data['realtime_tx_thrpt'], 1);
+    $string .= ' ' .$data['realtime_tx_thrpt'] . $postfix;
+
+    $string .= "\r\n";
+    $socket = socket_create (AF_INET, SOCK_DGRAM, SOL_UDP);
+    socket_connect($socket, 'localhost', 3434);
+    socket_send($socket, $string, strlen($string), MSG_EOR);
+    socket_close($socket);
+    usleep(500000);
+}
